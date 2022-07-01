@@ -42,9 +42,10 @@ RUN chmod +x /usr/bin/composer
 
 #将宿主机的php配置复制到容器中
 COPY ./php.ini /usr/local/etc/php/conf.d/php.ini
+COPY ./opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 #COPY ./supervisord.conf /etc/supervisor/supervisord.conf
 #CMD ["sh","-c","supervisord -c /etc/supervisor/supervisord.conf  && tail -f /dev/null"]
+RUN chown -R www-data:www-data /var/www
 
-WORKDIR /var/www/html/api-ds
-
+WORKDIR /var/www/html/api
