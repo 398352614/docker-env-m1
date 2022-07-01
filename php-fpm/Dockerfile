@@ -4,6 +4,7 @@ COPY ./sources.list.buster /etc/apt/sources.list
 
 RUN apt-get update \
     && apt-get install -y \
+        sudo \
         vim \
         curl \
         wget \
@@ -18,6 +19,10 @@ RUN apt-get update \
         libmemcached-dev \
         zlib1g-dev \
     && apt-get clean
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends libpq-dev \
+  && docker-php-ext-install mysqli pdo_pgsql pdo_mysql pcntl bcmath
 
 RUN apt-get install -y supervisor
 
@@ -38,5 +43,8 @@ RUN chmod +x /usr/bin/composer
 #将宿主机的php配置复制到容器中
 COPY ./php.ini /usr/local/etc/php/conf.d/php.ini
 
-WORKDIR /var/www/html
+#COPY ./supervisord.conf /etc/supervisor/supervisord.conf
+#CMD ["sh","-c","supervisord -c /etc/supervisor/supervisord.conf  && tail -f /dev/null"]
+
+WORKDIR /var/www/html/api-ds
 
