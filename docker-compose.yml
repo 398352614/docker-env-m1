@@ -2,13 +2,12 @@ version: '3'
 services:
 # nginx
   nginx:
-    image: nginx:1.21.6
     container_name: nginx
     build:
       context: ./nginx
     volumes:
       - ${WEB_ROOT}:/var/www/html
-      - ../data/nginx/log/:/var/log/nginx/
+      - ../data/nginx/logs/:/var/log/nginx/
     ports:
       - "${NGINX_HTTP_PORT}:80"
       - "${NGINX_HTTPS_PORT}:443"
@@ -19,25 +18,38 @@ services:
       - php-fpm
     restart: always
 
-# php-fpm
+# php
   php-fpm:
-    image: php:8.1.0
-    container_name: php-fpm
+    container_name: php
     build:
-      context: ./php-fpm
+      context: ./php
     volumes:
       - ${WEB_ROOT}:/var/www/html
-      - ../data/php/logs:/usr/local/var/log
+      - ../data/php/logs:/var/log/php/
     expose:
-      - "9000"
+      - 9000
     depends_on:
+      - mysql
+      - redis
+    restart: always
+
+# supervisor
+  supervisor:
+    container_name: supervisor
+    platform: "linux/amd64"
+    build:
+      context: ./supervisor
+    volumes:
+      - ${WEB_ROOT}:/var/www/html
+      - ../data/supervisor/logs:/var/log/supervisor/
+    depends_on:
+      - php-fpm
       - mysql
       - redis
     restart: always
 
 # mysql
   mysql:
-    image: mysql:8.0.29
     container_name: mysql
     build:
       context: ./mysql
@@ -53,7 +65,8 @@ services:
     restart: always
     command:
       --default-authentication-plugin=mysql_native_password
-  # redis
+
+# redis
   redis:
     image: redis:6.2.6
     container_name: redis
@@ -61,14 +74,10 @@ services:
       - "${REDIS_PORT}:6379"
     volumes:
       - ../data/redis:/data
-      - ../data/redis/logs:/var/log/redis/redis-server.log
+      - ../data/redis/logs:/var/log/redis/redis.log
     environment:
       - TZ=Asia/Shanghai
     command: redis-server --requirepass root --appendonly yes
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "1m"
     restart: always
 
 # phpmyadmin
