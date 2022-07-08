@@ -36,7 +36,6 @@ services:
 # supervisor
   supervisor:
     container_name: supervisor
-    platform: "linux/amd64"
     build:
       context: ./supervisor
     volumes:
