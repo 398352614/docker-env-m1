@@ -15,11 +15,11 @@ services:
       - TZ=Asia/Shanghai
       - LANG=en_US.UTF-8
     depends_on:
-      - php-fpm
+      - php
     restart: always
 
 # php
-  php-fpm:
+  php:
     container_name: php
     build:
       context: ./php
@@ -42,7 +42,7 @@ services:
       - ${WEB_ROOT}:/var/www/html
       - ../data/supervisor/logs:/var/log/supervisor/
     depends_on:
-      - php-fpm
+      - php
       - mysql
       - redis
     restart: always
