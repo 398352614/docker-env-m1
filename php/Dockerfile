@@ -36,18 +36,21 @@ RUN docker-php-ext-install -j$(nproc) iconv \
 && docker-php-ext-configure gd  --with-jpeg --with-freetype \
 && docker-php-ext-install -j$(nproc) gd
 
+#将宿主机的php配置复制到容器中
+COPY ./php.ini /usr/local/etc/php/conf.d/php.ini
+COPY ./opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+
 #安装redis扩展
 RUN pecl install -o -f redis \
 &&  rm -rf /tmp/pear \
 &&  docker-php-ext-enable redis
 
-#composer安装
-RUN wget https://mirrors.aliyun.com/composer/composer.phar -O /usr/bin/composer
-RUN chmod +x /usr/bin/composer
 
-#将宿主机的php配置复制到容器中
-COPY ./php.ini /usr/local/etc/php/conf.d/php.ini
-COPY ./opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 RUN chown -R www-data:www-data /var/www
 WORKDIR /var/www/html/api
+
+#composer安装
+RUN wget https://mirrors.aliyun.com/composer/composer.phar -O /usr/bin/composer \
+&& chmod +x /usr/bin/composer
+

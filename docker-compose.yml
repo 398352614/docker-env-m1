@@ -16,6 +16,7 @@ services:
       - LANG=en_US.UTF-8
     depends_on:
       - php
+      - supervisor
     restart: always
 
 # php
@@ -37,10 +38,18 @@ services:
   supervisor:
     container_name: supervisor
     build:
-      context: ./supervisor
+      context: ./
+      dockerfile: supervisor/Dockerfile
     volumes:
       - ${WEB_ROOT}:/var/www/html
       - ../data/supervisor/logs:/var/log/supervisor/
+    expose:
+      - 9000
+      - 11118
+      - 9001
+    ports:
+      - "11118:11118"
+      - "${HORIZON_PORT}:9001"
     depends_on:
       - php
       - mysql
@@ -51,7 +60,8 @@ services:
   mysql:
     container_name: mysql
     build:
-      context: ./mysql
+      context: ./
+      dockerfile: mysql/Dockerfile
     ports:
       - "${MYSQL_PORT}:3306"
     volumes:
@@ -59,7 +69,7 @@ services:
     expose:
       - 3306
     environment:
-      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_ROOT_PASSWORD="${MYSQL_PASSWORD}"
       - MYSQL_DATABASE=ds
     restart: always
     command:
@@ -67,16 +77,18 @@ services:
 
 # redis
   redis:
-    image: redis:6.2.6
     container_name: redis
+    build:
+      context: ./
+      dockerfile: redis/Dockerfile
     ports:
       - "${REDIS_PORT}:6379"
     volumes:
       - ../data/redis:/data
-      - ../data/redis/logs:/var/log/redis/redis.log
+      - ../data/redis/logs:/var/log/redis
     environment:
       - TZ=Asia/Shanghai
-    command: redis-server --requirepass root --appendonly yes
+    command: redis-server /etc/redis/redis.conf --requirepass ${REDIS_PASSWORD} --appendonly yes --logfile /var/log/redis/redis.log
     restart: always
 
 # phpmyadmin
@@ -101,9 +113,9 @@ services:
       - TZ=Asia/Shanghai
       - REDIS_1_HOST=redis
       - REDIS_1_PORT=6379
-      - REDIS_1_AUTH=root
+      - REDIS_1_AUTH=${REDIS_PASSWORD}
       - ADMIN_USER=root
-      - ADMIN_PASS=root
+      - ADMIN_PASS=${REDIS_PASSWORD}
     depends_on:
       - redis
     restart: always
